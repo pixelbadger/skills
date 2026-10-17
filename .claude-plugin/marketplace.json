@@ -1,0 +1,16 @@
+{
+  "name": "pixelbadger",
+  "owner": {
+    "name": "pixelbadger"
+  },
+  "metadata": {
+    "description": "Claude Code plugins from pixelbadger"
+  },
+  "plugins": [
+    {
+      "name": "pxb",
+      "source": "./plugins/pxb",
+      "description": "pixelbadger's Claude Code skills."
+    }
+  ]
+}
