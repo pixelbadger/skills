@@ -1,4 +1,4 @@
-# pbx
+# pxb
 
 pixelbadger's Claude Code skills, packaged as one plugin.
 
@@ -6,14 +6,14 @@ pixelbadger's Claude Code skills, packaged as one plugin.
 
 ```text
 /plugin marketplace add pixelbadger/skills
-/plugin install pbx@pixelbadger
+/plugin install pxb@pixelbadger
 ```
 
 ## Skills
 
 | Skill | Command |
 |---|---|
-| [Conduct](#conduct) | `/pbx:conduct <change request>` |
+| [Conduct](#conduct) | `/pxb:conduct <change request>` |
 
 ## Conduct
 
@@ -22,7 +22,7 @@ Conduct puts you in charge of a swarm of agents for large, cross-cutting or risk
 ### Use
 
 ```text
-/pbx:conduct <change request>
+/pxb:conduct <change request>
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.

@@ -8,8 +8,8 @@
   },
   "plugins": [
     {
-      "name": "pbx",
-      "source": "./plugins/pbx",
+      "name": "pxb",
+      "source": "./plugins/pxb",
       "description": "pixelbadger's Claude Code skills."
     }
   ]
