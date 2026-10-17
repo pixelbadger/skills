@@ -8,8 +8,8 @@
   },
   "plugins": [
     {
-      "name": "conductor",
-      "source": "./plugins/conductor",
+      "name": "conduct",
+      "source": "./plugins/conduct",
       "description": "Orchestrate large repository changes through a locked specification, tier-routed parallel implementation and adversarial integration loops."
     }
   ]

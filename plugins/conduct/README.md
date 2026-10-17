@@ -1,18 +1,18 @@
-# Conductor
+# Conduct
 
-Conductor puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
+Conduct puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
 
 ## Install
 
 ```text
 /plugin marketplace add pixelbadger/skills
-/plugin install conductor@pixelbadger
+/plugin install conduct@pixelbadger
 ```
 
 ## Use
 
 ```text
-/conductor:conduct <change request>
+/conduct:conduct <change request>
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
@@ -34,7 +34,7 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 | Judgement | Semantic changes, subtle reviews, exploratory E2E | `sonnet` |
 | Mechanical | Bounded changes, test runs, fixed E2E plans | `haiku` |
 
-Run Conductor from your most capable model. To change the models, edit the Tiers table in `skills/conduct/SKILL.md`.
+Run Conduct from your most capable model. To change the models, edit the Tiers table in `skills/conduct/SKILL.md`.
 
 ## Your role as conductor
 
