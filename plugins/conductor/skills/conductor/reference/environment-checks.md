@@ -12,11 +12,11 @@ Every check follows the same protocol:
 4. **Record** the result as one of:
    - `pass`: passed first time;
    - `healed: <action>`: passed after the named heal;
-   - `raised`: still failing, or no heal is allowed. A raised check is an operator question before that stage's gate. Ask it as a Zero-Ambiguity Gate question, with the evidence and your recommendation.
+   - `raised`: still failing, or no heal is allowed. A raised check is a conductor question before that stage's gate. Ask it as a Zero-Ambiguity Gate question, with the evidence and your recommendation.
 
 Heal rules:
 
-- A heal never mutates (see the mutation definition in SKILL.md). It never touches tracked files, and never changes the operator's checkout.
+- A heal never mutates (see the mutation definition in SKILL.md). It never touches tracked files, and never changes the conductor's checkout.
 - A heal never deletes anything this run didn't create (per the run manifest): its `swarm/*` worktrees and branches, build outputs, scratch and evidence dirs. Residue from earlier runs is never healed: it is `raised`.
 - A heal never stops a process the swarm didn't start.
 - If a heal would need anything else, the check is `raised`.
@@ -29,9 +29,9 @@ Heal rules:
 |---|---|---|
 | **Free disk and memory snapshot** | Record free disk on the volumes for worktrees, scratch and evidence, and free memory. Pass if there is enough for at least one worktree, its build and the baseline test run. | `git worktree prune` (drops registrations whose directories are already gone). Anything else is `raised`: list earlier runs' worktrees, `swarm/*` branches and evidence dirs with their sizes and ages, and recommend which to remove. |
 | **Base commit** | The base commit resolves (`git rev-parse <base>`) and checks out into a worktree. | Fetch the base branch once. |
-| **Toolchain / SDK** | Every SDK and tool the build, tests and E2E need is present at the version the repository pins (e.g. `global.json`, `.nvmrc`, `rust-toolchain`). | None. Installing a toolchain is the operator's call: raise. |
+| **Toolchain / SDK** | Every SDK and tool the build, tests and E2E need is present at the version the repository pins (e.g. `global.json`, `.nvmrc`, `rust-toolchain`). | None. Installing a toolchain is the conductor's call: raise. |
 | **Peak-memory measurement** | A way to measure a command's peak memory works here. Try, in order: `/usr/bin/time -v` ("Maximum resident set size"); the cgroup v2 `memory.peak` of a transient scope (e.g. `systemd-run --scope`); sampling the command's process tree from `/proc` every 0.5 s as a wrapper that exits with the command; on Windows, the process's `PeakWorkingSet64`. Record the first that works as the `Measurement:` line. | None needed: falling back down the list is the check. If none works, raise. Until then the memory footprint is unknown, and the concurrency cap is 1. |
-| **Package-feed credentials** | A clean restore from every feed the build uses succeeds, private feeds included. A cached restore is not proof. | Re-restore into a fresh package cache in scratch (e.g. `NUGET_PACKAGES`, `npm_config_cache`). Never delete the operator's own cache. Missing or expired credentials can't be healed: raise. |
+| **Package-feed credentials** | A clean restore from every feed the build uses succeeds, private feeds included. A cached restore is not proof. | Re-restore into a fresh package cache in scratch (e.g. `NUGET_PACKAGES`, `npm_config_cache`). Never delete the conductor's own cache. Missing or expired credentials can't be healed: raise. |
 
 ## Stage B — stack
 

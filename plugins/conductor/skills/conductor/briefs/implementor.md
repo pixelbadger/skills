@@ -29,7 +29,7 @@ Stream: **{{STREAM}}** · Mode: **{{MODE}}**
 ## Workspace
 
 - Worktree: `{{WORKTREE}}` on branch `{{BRANCH}}`, created from `{{BASE_SHA}}`.
-- Work only in that worktree, using absolute paths. Never write in any other directory, including the operator's own checkout.
+- Work only in that worktree, using absolute paths. Never write in any other directory, including the conductor's own checkout.
 - Before writing anything, check `git -C {{WORKTREE}} rev-parse HEAD`. {{HEAD_RULE}}. If HEAD is stale, or the worktree is missing, stop and report. Never fall back to another directory.
 - Read-only sibling worktrees (do not modify): {{SIBLINGS}}
 

@@ -1,6 +1,6 @@
 # Conductor
 
-Conductor turns the invoking Claude Code session into an **orchestrator** for large, cross-cutting or risky repository changes. The orchestrator never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
+Conductor puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
 
 ## Install
 
@@ -36,6 +36,6 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 
 Run Conductor from your most capable model. To change the models, edit the Tiers table in `skills/conductor/SKILL.md`.
 
-## Your role
+## Your role as conductor
 
 You own intent, priorities, risk appetite, budget and final judgement. Expect to answer questions during the specification phase and to approve the locked specification. After that, the run proceeds without you unless a specification defect, a defect that survives two fix rounds, or the budget needs a decision.

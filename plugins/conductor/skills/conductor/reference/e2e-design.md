@@ -16,8 +16,8 @@ Scoping rules:
 - Use the **lowest surface that still proves the criterion**. A criterion about stored data or response shape can be proven through the API or CLI even if the feature also has a UI. A criterion about what the user sees or does in the browser **must** use the web UI. Do not substitute an API call for a UI check.
 - A feature that has a web UI gets at least one web-UI happy-path scenario, even when most of its criteria are scoped to API/CLI.
 - The system under test is never mocked. External third-party dependencies are real, sandboxed, or stubbed only as the locked spec allows. Record which.
-- If a surface's tooling is unavailable in this environment, that is a Zero-Ambiguity Gate failure, not a reason to scope down silently. Raise it with the operator before SPEC LOCK.
-- If the environment later prevents the evidence the locked spec names (e.g. a Release build that needs a licence only CI has), propose the closest substitute and get the operator's acknowledgement before relying on it. Record the substitution in the Completion Report.
+- If a surface's tooling is unavailable in this environment, that is a Zero-Ambiguity Gate failure, not a reason to scope down silently. Raise it with the conductor before SPEC LOCK.
+- If the environment later prevents the evidence the locked spec names (e.g. a Release build that needs a licence only CI has), propose the closest substitute and get the conductor's acknowledgement before relying on it. Record the substitution in the Completion Report.
 
 ### Chrome tooling for web UI
 
@@ -78,7 +78,7 @@ Outcomes:
 | Evidence proves the expected outcome | — | criterion evidenced |
 | FAIL, and the plan matches the spec | implementation defect | defect ledger → implementation round → re-run the affected plans on the new candidate |
 | FAIL or PASS, but the plan, the expectation, or the evidence was wrong or too weak | verification defect | fix the plan and re-dispatch. Never relax an expectation the spec requires |
-| BLOCKED after one retry | environment issue | diagnose read-only. If it can't be resolved, record it as a residual risk and tell the operator. A criterion with no E2E evidence is not complete |
+| BLOCKED after one retry | environment issue | diagnose read-only. If it can't be resolved, record it as a residual risk and tell the conductor. A criterion with no E2E evidence is not complete |
 | Evidence reveals behaviour the spec never decided | specification defect | return to Phase 1 |
 
 After any implementation round, re-run every E2E plan that touches changed behaviour, on the new candidate SHA. Evidence from an earlier SHA does not count. A re-run may go to the same executor as a message carrying an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) plus any added scenarios. The executor must not read earlier evidence.

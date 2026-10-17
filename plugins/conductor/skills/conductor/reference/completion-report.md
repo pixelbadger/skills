@@ -18,7 +18,7 @@ Streams, tiers, and notable routing decisions.
 Important defects discovered between streams and how later implementation rounds resolved them.
 
 ### Residual risks
-Anything genuinely remaining, including skipped environmental tests, evidence substitutions the operator acknowledged, and pre-existing defects left out of scope.
+Anything genuinely remaining, including skipped environmental tests, evidence substitutions the conductor acknowledged, and pre-existing defects left out of scope.
 
 ### Change set
 Final branch/PR/commits as appropriate.
