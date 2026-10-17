@@ -17,6 +17,8 @@ pixelbadger's Claude Code skills, packaged as one plugin.
 
 ## Conduct
 
+> **conduct** */kənˈdʌkt/* (verb): to direct the performance of an orchestra; to organise and carry out.
+
 Conduct puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
 
 ### Use
