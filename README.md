@@ -12,4 +12,4 @@ pixelbadger's Claude Code plugin marketplace.
 
 | Plugin | Description |
 |---|---|
-| [pxb](plugins/pxb) | pixelbadger's Claude Code skills, packaged as one plugin. Includes Conduct, which runs a swarm of agents for large, cross-cutting or risky repository changes. |
+| [pxb](plugins/pxb) | pixelbadger's Claude Code skills, packaged as one plugin. Includes Conduct, which orchestrates a swarm of agents through large, cross-cutting or risky repository changes while you direct from the podium. |
