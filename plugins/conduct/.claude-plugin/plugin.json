@@ -1,9 +1,0 @@
-{
-  "name": "conduct",
-  "version": "1.0.0",
-  "description": "Orchestrate large repository changes through a locked specification, tier-routed parallel implementation and adversarial integration loops.",
-  "author": {
-    "name": "pixelbadger"
-  },
-  "license": "GPL-3.0-only"
-}

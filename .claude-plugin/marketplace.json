@@ -8,9 +8,9 @@
   },
   "plugins": [
     {
-      "name": "conduct",
-      "source": "./plugins/conduct",
-      "description": "Orchestrate large repository changes through a locked specification, tier-routed parallel implementation and adversarial integration loops."
+      "name": "pbx",
+      "source": "./plugins/pbx",
+      "description": "pixelbadger's Claude Code skills."
     }
   ]
 }

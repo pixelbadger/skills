@@ -1,23 +1,33 @@
-# Conduct
+# pbx
 
-Conduct puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
+pixelbadger's Claude Code skills, packaged as one plugin.
 
 ## Install
 
 ```text
 /plugin marketplace add pixelbadger/skills
-/plugin install conduct@pixelbadger
+/plugin install pbx@pixelbadger
 ```
 
-## Use
+## Skills
+
+| Skill | Command |
+|---|---|
+| [Conduct](#conduct) | `/pbx:conduct <change request>` |
+
+## Conduct
+
+Conduct puts you in charge of a swarm of agents for large, cross-cutting or risky repository changes. You are the **conductor**; the invoking Claude Code session becomes the **orchestrator**, and never edits the code itself. It locks a specification with you, splits the work into parallel streams, dispatches them to cheaper worker models in isolated git worktrees, and then reviews and tests the combined result until the specification is satisfied.
+
+### Use
 
 ```text
-/conduct:conduct <change request>
+/pbx:conduct <change request>
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
 
-## What happens
+### What happens
 
 1. **Preflight.** Checks the host, toolchain and resources, and establishes a green test baseline.
 2. **Specification.** Researches the repository, then asks you one decision at a time until nothing is ambiguous, including a budget. You approve the **locked specification** before any code changes.
@@ -26,7 +36,7 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 5. **Integration.** Composes the streams, fans out read-only reviews, test runs and E2E checks, and turns defects into further implementation rounds.
 6. **Completion.** Stops at the completion gate and delivers onto the branch you or the repository's rules designate, with a completion report.
 
-## Model tiers
+### Model tiers
 
 | Tier | Used for | Model |
 |---|---|---|
@@ -36,6 +46,6 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 
 Run Conduct from your most capable model. To change the models, edit the Tiers table in `skills/conduct/SKILL.md`.
 
-## Your role as conductor
+### Your role as conductor
 
 You own intent, priorities, risk appetite, budget and final judgement. Expect to answer questions during the specification phase and to approve the locked specification. After that, the run proceeds without you unless a specification defect, a defect that survives two fix rounds, or the budget needs a decision.

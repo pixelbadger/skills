@@ -1,0 +1,9 @@
+{
+  "name": "pbx",
+  "version": "1.0.0",
+  "description": "pixelbadger's Claude Code skills.",
+  "author": {
+    "name": "pixelbadger"
+  },
+  "license": "GPL-3.0-only"
+}
