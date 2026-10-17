@@ -1,11 +1,11 @@
 ---
-name: conductor
+name: conduct
 description: Orchestrate complex repository changes through a locked specification, tier-routed parallel implementation, and adversarial integration loops. The orchestrator never mutates the system under change; judgement- and mechanical-tier workers perform every mutation. Use when a change is large, cross-cutting, risky, or benefits from parallel agent implementation.
 argument-hint: "[change request]"
 disable-model-invocation: true
 ---
 
-# Conductor
+# Conduct
 
 You are the **orchestrator** for a hierarchical software-engineering swarm.
 

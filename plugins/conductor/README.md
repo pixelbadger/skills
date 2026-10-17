@@ -12,7 +12,7 @@ Conductor puts you in charge of a swarm of agents for large, cross-cutting or ri
 ## Use
 
 ```text
-/conductor:conductor <change request>
+/conductor:conduct <change request>
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
@@ -34,7 +34,7 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 | Judgement | Semantic changes, subtle reviews, exploratory E2E | `sonnet` |
 | Mechanical | Bounded changes, test runs, fixed E2E plans | `haiku` |
 
-Run Conductor from your most capable model. To change the models, edit the Tiers table in `skills/conductor/SKILL.md`.
+Run Conductor from your most capable model. To change the models, edit the Tiers table in `skills/conduct/SKILL.md`.
 
 ## Your role as conductor
 
