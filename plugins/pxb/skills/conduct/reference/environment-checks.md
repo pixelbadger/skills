@@ -31,6 +31,7 @@ Heal rules:
 | **Base commit** | The base commit resolves (`git rev-parse <base>`) and checks out into a worktree. | Fetch the base branch once. |
 | **Toolchain / SDK** | Every SDK and tool the build, tests and E2E need is present at the version the repository pins (e.g. `global.json`, `.nvmrc`, `rust-toolchain`). | None. Installing a toolchain is the conductor's call: raise. |
 | **Peak-memory measurement** | A way to measure a command's peak memory works here. Try, in order: `/usr/bin/time -v` ("Maximum resident set size"); the cgroup v2 `memory.peak` of a transient scope (e.g. `systemd-run --scope`); sampling the command's process tree from `/proc` every 0.5 s as a wrapper that exits with the command; on Windows, the process's `PeakWorkingSet64`. Record the first that works as the `Measurement:` line. | None needed: falling back down the list is the check. If none works, raise. Until then the memory footprint is unknown, and the concurrency cap is 1. |
+| **Run database** | `python3 <skill dir>/db/get.py v_runs --limit 1` succeeds (Python 3.8+ with SQLite JSON support; the database path is writable). Record the database path, from `$PXB_CONDUCT_DB`, else `$CLAUDE_CONFIG_DIR/pxb/conduct.db`, else `~/.claude/pxb/conduct.db`. | Try `python`, then `py -3`, as the interpreter. If the path isn't writable, prefix every call with `PXB_CONDUCT_DB=<a path in scratch>` (shell state doesn't persist between calls, so it goes in the recorded command itself) and record that the run is recoverable only while scratch survives. Otherwise raise: the run can go ahead unrecoverable if the conductor agrees. |
 | **Package-feed credentials** | A clean restore from every feed the build uses succeeds, private feeds included. A cached restore is not proof. | Re-restore into a fresh package cache in scratch (e.g. `NUGET_PACKAGES`, `npm_config_cache`). Never delete the conductor's own cache. Missing or expired credentials can't be healed: raise. |
 
 ## Stage B — stack
@@ -67,7 +68,8 @@ Known constraints:     <e.g. a tool that is missing, a test category that can't 
 Measurement:           <the Stage A peak-memory method, as an exact wrapper command>
 Pre-existing failures: <test ids, or none, or pending baseline>
 Footprint (one unit):  disk <measured>, peak memory <measured | not yet measured>
-Stage A: disk/memory <pass|healed: …|raised>; base <…>; toolchain <…>; measurement <…>; feeds <…>
+Run database:          <database path>; session <row id>; command <interpreter and any PXB_CONDUCT_DB prefix>; DB_ADD <exact add command>
+Stage A: disk/memory <pass|healed: …|raised>; base <…>; toolchain <…>; measurement <…>; run DB <…>; feeds <…>
 Stage B: docker <…|n/a>; local DB <…|n/a>; E2E host <…>; browser <…|n/a>
 Stage C: cap <N> (free memory <…>, free disk <…>), at <time or round> | not yet run
 ```

@@ -1,7 +1,7 @@
 ---
 name: conduct
 description: Orchestrate complex repository changes through a locked specification, tier-routed parallel implementation, and adversarial integration loops. The orchestrator never mutates the system under change; judgement- and mechanical-tier workers perform every mutation. Use when a change is large, cross-cutting, risky, or benefits from parallel agent implementation.
-argument-hint: "[change request]"
+argument-hint: "[change request | resume [session]]"
 disable-model-invocation: true
 ---
 
@@ -41,8 +41,9 @@ Only this file is read up front. Each other file is read at the phase that needs
 | `briefs/reviewer.md` | Each read-only integration review | Reviewer brief |
 | `briefs/e2e-executor.md` | Each fixed E2E plan | E2E executor brief |
 | `briefs/e2e-explorer.md` | Each exploratory charter | E2E explorer brief |
+| `db/*.py` | Throughout (see **Persistence**) | Run database scripts |
 
-**Briefs are handed over whole.** Each brief is self-contained: a worker given only the filled brief has everything it needs, and never needs this file. To dispatch, read the brief, replace every placeholder listed in its header comment, confirm none remains (search the filled text for `{{`; the header comment itself contains none), and pass the result on unchanged, header comment included. Never paraphrase or abridge a brief.
+**Briefs are handed over whole.** Each brief is self-contained: a worker given only the filled brief has everything it needs, and never needs this file. To dispatch, read the brief, replace every placeholder listed in its header comment (`SESSION_ID`, `DISPATCH_ID` and `DB_ADD` come from **Persistence**), confirm none remains (search the filled text for `{{`; the header comment itself contains none), and pass the result on unchanged, header comment included. Never paraphrase or abridge a brief.
 
 The delivery loop is:
 
@@ -115,9 +116,10 @@ A **mutation** is any change that could alter the behaviour of the system under 
 
 These change nothing the system does and land nothing in the final diff, so the orchestrator performs them itself:
 
-- **git plumbing**: creating and removing worktrees and `swarm/*` branches, conflict-free merges and fast-forwards into a composition worktree, and cleanup. Record every worktree, branch, build output and evidence dir you create in a run manifest in scratch: it defines what this run may delete;
+- **git plumbing**: creating and removing worktrees and `swarm/*` branches, conflict-free merges and fast-forwards into a composition worktree, and cleanup. Record every worktree, branch, build output and evidence dir you create as an `artifact` in the run database (see **Persistence**): those rows are the run manifest, and define what this run may delete;
 - **scratch files** outside the repository: plans, ledgers, briefs, E2E plans and charters, and blind fixtures with their ground truth;
-- **environment self-heals** within each check's allow-list in `reference/environment-checks.md`.
+- **environment self-heals** within each check's allow-list in `reference/environment-checks.md`;
+- **run database writes** to the entities the orchestrator owns (see **Persistence**). The database lives outside the repository and records the run; it changes nothing the system does.
 
 If an action fits neither list, treat it as mutation.
 
@@ -158,6 +160,54 @@ This is the only concurrency cap in the skill. Every other mention of running th
 - **Recomputed** before each fan-out by re-running Stage C. If dispatching a unit would exceed the cap, queue it and dispatch it when a running unit finishes. Serialise rather than risk OOM kills, which look like flaky failures.
 - **Timing and performance plans still run alone**, with no other unit running.
 - **Browser-MCP plans run one at a time.** They share a single browser, so at most one plan or charter using Chrome browser MCP tools runs at once, whatever the cap. When several web-UI plans need to run in parallel, write them for Playwright driving the pre-installed Chromium, which gives each executor its own browser.
+
+---
+
+# Persistence
+
+The run is recorded in a SQLite database outside the repository, so that a later session can pick it up (see **Recovery**). The scripts are in this skill's `db/` directory. Call them as `python3 <this skill's base directory>/db/<script>.py`, written `db/<script>` below, with the interpreter and any prefix that the Stage A run database check recorded.
+
+This Claude Code session's id is `${CLAUDE_SESSION_ID}`. Pass `--session ${CLAUDE_SESSION_ID}` on every call: it resolves to this run's latest session row, and a write is refused if its row belongs to another run. If the id above appears unsubstituted, use the session row id that the first `add session` returns instead.
+
+- **You write as `--as orchestrator`, to the entities you own:** `session`, `spec`, `note`, `stream`, `dispatch`, `defect`, `artifact`. Workers record their own reports. Never write one for them.
+- **Commands.** `db/add <entity> [field ...]` inserts and prints the row with its `id`. `db/update <entity> <id> [field ...]` sets columns and merges context. `db/get <entity|view> [field=value ...]` reads. `db/resume <session>` renders everything a resumed run needs.
+- **Fields.** `key=value` is a string, `key:=json` a JSON value (`round:=2`, `depends_on:='["api"]'`), `key=@path` a file's contents, `key=@-` stdin (use a heredoc for long text). Keys that aren't columns go into the row's JSON context, so record whatever recovery would need.
+- **Views.** `v_stream_ledger`, `v_open_defects`, `v_in_flight`, `v_live_artifacts`, `v_spend`, `v_current_spec`, `v_runs`, each read with `db/get <view> --session ${CLAUDE_SESSION_ID}`.
+
+Write at these moments, and only these. Each command below also takes `--as orchestrator --session ${CLAUDE_SESSION_ID}`:
+
+| Moment | Write |
+|---|---|
+| Invocation | `add session claude_session_id=${CLAUDE_SESSION_ID} repo=<repo root> phase=preflight request=@-` with the change request on stdin |
+| Each phase transition | `update session <id> phase=<preflight\|specification\|planning\|implementation\|integration\|completion>`; at SPEC LOCK also `branch=<delivery branch> base_sha=<base SHA>` |
+| Environment block assembled or changed | `add note kind=environment text=@-` (the latest one is current) |
+| Each conductor answer, and each budget change | `add note kind=decision question=<…> text=<answer>` |
+| Spec presented, locked or reopened | `add spec version:=<n> status=draft\|locked text=@- budget=<…>`; on reopen, `update spec <id> status=superseded` |
+| Implementation DAG, and each replan | `add stream name=<…> tier=<…> round:=<n> depends_on:='[…]' objective=<…>` per new stream |
+| Each worktree, branch, build output or evidence dir created | `add artifact kind=worktree\|branch\|build\|evidence\|scratch path=<…>`; on removal, `update artifact <id> status=removed` |
+| Each dispatch, before sending it | Save the filled brief to scratch, then `add dispatch worker=<role> tier=<…> stream_id:=<id> round:=<n> pre_lock:=<0\|1> brief=@<file>` |
+| Each returned report, once processed | `update dispatch <id> status=done` |
+| Each stream ledger change | `update stream <id> state=<…> branch=<…> worktree=<…> commit_sha=<…> concerns=<…>` |
+| Each defect ledger change | `add defect code=<D…> class=<…> severity=<…> criterion=<…> evidence=<…> required_change=<…>`, then `update defect <id> …` as it moves |
+| Completion | `update session <id> phase=completion status=complete` |
+
+Fill each worker brief's persistence placeholders from these rows: `SESSION_ID` is the session row id, `DISPATCH_ID` the `id` that `add dispatch` returned, and `DB_ADD` the exact add command from the Environment block's `Run database:` line (interpreter, any prefix, absolute path). Save the brief to scratch only after filling them.
+
+Database writes are not dispatches and don't count towards the budget. A write that fails is not a reason to stop: retry it once, then tell the conductor that recovery is degraded from that point, and carry on.
+
+---
+
+# Recovery
+
+A run whose session ended (crash, closed terminal, exhausted context) can be continued in a new one with `/pxb:conduct resume [session]`.
+
+1. **Find the run.** Run the Stage A run database check first. Use the session given (a session row id or a Claude Code session id). Otherwise `db/get v_runs repo=<repo root> status=active`: if there is one, use it; if several, ask the conductor which; if none, say so and stop.
+2. **Read it.** `db/resume <session>`, all of it.
+3. **Open a session for this run.** `db/add session claude_session_id=${CLAUDE_SESSION_ID} resumed_from:=<old session row id>`, copying `repo`, `branch`, `base_sha` and `phase` from the old row. Earlier rows stay where they are; update them in place by id. Every read with `--session` covers the whole lineage.
+4. **Verify before relying on anything.** The database records what was believed, not what is true. Check each live artifact exists (`git worktree list`, `git branch --list 'swarm/*'`, the paths). Check each stream's branch head against its recorded `commit_sha` and last report's commit, and whether its worktree is clean. Where the database and reality disagree, believe reality, record a `note kind=recovery` describing the difference, and update the rows. A dirty worktree under a stream that never reported is unfinished work: remove the worktree and branch, and re-dispatch the stream from a fresh one.
+5. **Settle what was in flight.** No subagent survives its session. For each `in_flight` dispatch: if it has a report, process that report as if the worker had just returned it, evidence review included; if not, `update dispatch <id> status=abandoned` and re-dispatch its stored brief as a new dispatch, with `DISPATCH_ID`, `SESSION_ID` and the Environment block replaced by current values. Abandoned dispatches stay in the spend.
+6. **Re-check the environment.** Re-run Stages A and B, and Stage C before the next fan-out. The baseline still holds if the base worktree exists at the base SHA; otherwise rebuild it and re-run the baseline.
+7. **Report and continue.** Tell the conductor in a few lines what was recovered: phase, spec version and lock state, stream ledger, open defects, spend, what is being re-dispatched, and any differences step 4 found. Then continue the recorded phase. In the specification phase, carry on grilling from the recorded decisions without asking them again.
 
 ---
 
@@ -384,7 +434,7 @@ States:
 - rejected
 - superseded
 
-Below the ledger, keep a running **spend line** against each budget item, e.g. `Spend: round 2 of 4 · 9 of 20 subagents · 1h40 of 4h`. Update it at every dispatch. Dispatches made before SPEC LOCK (the baseline test executor, pre-lock probes) happen before any budget exists: list them on the spend line as `pre-lock`, but don't count them against the budget ⚙. When the next dispatch would exceed any budget item, stop before dispatching and ask the conductor, with the spend so far, what remains, and a recommendation.
+Below the ledger, keep a running **spend line** against each budget item, e.g. `Spend: round 2 of 4 · 9 of 20 subagents · 1h40 of 4h`. Update it at every dispatch, from `db/get v_spend`. Dispatches made before SPEC LOCK (the baseline test executor, pre-lock probes) happen before any budget exists: list them on the spend line as `pre-lock`, but don't count them against the budget ⚙. When the next dispatch would exceed any budget item, stop before dispatching and ask the conductor, with the spend so far, what remains, and a recommendation.
 
 When an implementor returns:
 
@@ -623,9 +673,11 @@ Spend integration budget accordingly.
 
 # Invocation behaviour
 
+When invoked with `resume [session]`, follow **Recovery**.
+
 When invoked with a change request:
 
-1. Run environment **Stage A** and start the Environment block.
+1. Run environment **Stage A**, its run database check first, and start the Environment block. Then check `db/get v_runs repo=<repo root> status=active`: if a run is active in this repository, ask the conductor whether to resume it or abandon it (`update session <id> status=abandoned --as orchestrator --session <id>`, naming that run's session, not this one). Then `add session` (see **Persistence**).
 2. Announce **Specification Phase**.
 3. Research the repository before asking questions. Settle every checkable claim yourself.
 4. Run environment **Stage B**.

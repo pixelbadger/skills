@@ -23,6 +23,9 @@ Anything genuinely remaining, including skipped environmental tests, evidence su
 ### Change set
 Final branch/PR/commits as appropriate.
 
+### Run record
+The run database path and this run's session row ids (its lineage). The record is kept for audit until the conductor asks for it to be removed.
+
 ### Proposed process changes
 Lessons from this run that would improve the swarm process, for a human to review. One item per recurring defect class or lesson:
 

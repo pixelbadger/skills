@@ -25,6 +25,7 @@ Conduct puts you in charge of a swarm of agents for large, cross-cutting or risk
 
 ```text
 /pxb:conduct <change request>
+/pxb:conduct resume [session]
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
@@ -37,6 +38,12 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 4. **Implementation.** Dispatches workers in parallel, each in its own worktree, up to a concurrency cap sized from free memory and disk.
 5. **Integration.** Composes the streams, fans out read-only reviews, test runs and E2E checks, and turns defects into further implementation rounds.
 6. **Completion.** Stops at the completion gate and delivers onto the branch you or the repository's rules designate, with a completion report.
+
+### Persistence and resume
+
+Conduct records each run in a SQLite database at `~/.claude/pxb/conduct.db` (override with `PXB_CONDUCT_DB`): the locked specification, your decisions, the stream and defect ledgers, every dispatch and worker report, and the worktrees and branches the run created. If the session ends mid-run, `/pxb:conduct resume` in a new session finds the active run for the repository, checks the recorded state against git and the filesystem, re-dispatches whatever was in flight, and carries on. Pass a session id to pick a specific run.
+
+Each role writes only its own records: the orchestrator writes orchestration state, and each worker writes its own report. Records are kept after a run finishes, for audit, until you ask for them to go. The scripts need Python 3.8 or later. They are documented in [`skills/conduct/db/API.md`](skills/conduct/db/API.md), and the schema's design rules in [`skills/conduct/db/SQL-DEVELOPMENT.md`](skills/conduct/db/SQL-DEVELOPMENT.md).
 
 ### Model tiers
 

@@ -4,13 +4,16 @@
 Placeholders. Each NAME below appears in the brief wrapped in double braces. Replace every one with its value before dispatch; none may remain. This comment contains no braces, so it can stay.
   PLAN_ID   the plan's id
   PLAN      the complete E2E plan, in the plan format below, verbatim
+  SESSION_ID         the run database session row id
+  DISPATCH_ID        the run database id of this dispatch
+  DB_ADD             the exact command for the run database's add script, e.g. python3 /abs/path/db/add.py
 -->
 
 You are an E2E executor. Run the plan below exactly as written. You are producing evidence, not fixing anything.
 
 ## Rules
 
-- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir. Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
+- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir, apart from recording your report (see **Record your report**). Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
 - Perform steps in order. Do not skip, reorder, add, or "improve" steps.
 - Apply the plan's Environment line to every command. Use only the commands and checks the plan's Glossary defines.
 - For each step, compare the actual outcome with the expected outcome literally. If they differ, mark the step FAIL, capture failure evidence (a PNG if it is a UI defect, otherwise page text / full response / full output), skip the remaining steps of that scenario, and continue with the next scenario.
@@ -57,6 +60,18 @@ TEARDOWN (exact commands; always run, even after failure)
 {{PLAN}}
 ```
 
+## Record your report
+
+Before you return your handover, record it in the run database, so the run can be recovered if the session that dispatched you ends:
+
+```bash
+{{DB_ADD}} report --as e2e-executor --session {{SESSION_ID}} dispatch_id:={{DISPATCH_ID}} verdict=<pass|fail|blocked> commit_sha=<the candidate SHA> handover=@- <<'EOF'
+<your E2E result, exactly as you will return it>
+EOF
+```
+
+This is the only write you may make outside the evidence and scratch dirs. If the command fails, retry it once. If it fails again, return your handover anyway, with a last line `Persist: failed — <error>`.
+
 ## Handover
 
 Return a compact, structured report in exactly this format. Bulk material stays on disk in the evidence dir.
@@ -84,4 +99,4 @@ Deviations from plan: none | <list>
 
 ## Re-runs
 
-You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.
+You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. The substitutions include a new `DISPATCH_ID`: record the re-run's report under it. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.
