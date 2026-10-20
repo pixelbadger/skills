@@ -27,7 +27,7 @@ Final branch/PR/commits as appropriate.
 The run directory's path. Evidence dirs in it are deleted per SKILL.md; the run memory, ledgers, briefs and reports are kept for audit until the conductor asks for them to be removed.
 
 ### Proposed process changes
-Lessons from this run that would improve the swarm process, for a human to review. One item per recurring defect class or lesson:
+Lessons from this run that would improve the swarm process, for a human to review, drawn from `## Lessons` in `run.md`. One item per recurring defect class or lesson:
 
 - **Class / lesson:** what went wrong, or what worked, in one line.
 - **Evidence:** the defect IDs, rounds or incidents from this run that show it.

@@ -47,6 +47,6 @@ Lock only when all hold:
 - The conductor has set a budget in observable units. If not, ask for one as its own question, with a recommended value. For an unobservable unit (tokens, money), propose an observable proxy and get it confirmed.
 - You are satisfied that the specification is coherent.
 
-Present the **LOCKED SPECIFICATION**: decisions, budget and acceptance criteria, with ⚙ on your own decisions. Request explicit approval. Nothing is implemented before **SPEC LOCK**. If the conductor's intent changes later, reopen the specification and identify the invalidated work.
+Present the **LOCKED SPECIFICATION**: decisions, budget, acceptance criteria and the delivery branch, with ⚙ on your own decisions. The delivery branch is the one the conductor or session designates, else the repository's convention (e.g. `feature/<name>`). Request explicit approval. Nothing is implemented before **SPEC LOCK**. If the conductor's intent changes later, reopen the specification and identify the invalidated work.
 
-After SPEC LOCK, set `Phase: planning` and read `phases/2-planning.md`.
+After SPEC LOCK, record `Branch:` and `Base:` in `run.md`, set `Phase: planning`, and read `phases/2-planning.md`.

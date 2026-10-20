@@ -1,6 +1,6 @@
 # Phase 4: Integration
 
-Determine whether the assembled system satisfies the locked specification, especially at boundaries no stream owned. Defects concentrate at seams: assumptions between streams, assumptions about dependencies, application/platform boundaries, state transitions, timing, failure and recovery paths. Spend integration effort there.
+Determine whether the assembled system satisfies the locked specification, especially at the seams no stream owned (see **Seams**, SKILL.md). Spend integration effort there.
 
 ## 1. Review
 

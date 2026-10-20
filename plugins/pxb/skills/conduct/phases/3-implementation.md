@@ -2,7 +2,10 @@
 
 ## Dispatch
 
-Each implementation stream and composition implementor is dispatched with `briefs/implementor.md`.
+Launch streams whose dependencies are met, up to the cap; queue the rest and dispatch them as running units finish. Each implementation stream and composition implementor is dispatched with `briefs/implementor.md`.
+
+- **Commit trailer**: you choose it and put it in every implementor brief, so implementors never choose. Precedence: the conductor's instructions, then the repository's rules, then the session's attribution instructions.
+- **Missing prerequisite** exposed by a stream: within the locked spec, replan and dispatch it; if it needs a new product or contract decision, stop the affected branch and reopen the specification.
 
 Each writing stream gets its own worktree, which you create before dispatch, from the locked base, outside the repository, under a short root (e.g. `/tmp/sw/<stream>` or `C:\sw\<stream>`; deep paths break `MAX_PATH`, socket paths and some build tools):
 

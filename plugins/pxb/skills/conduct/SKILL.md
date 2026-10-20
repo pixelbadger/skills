@@ -44,7 +44,22 @@ Only this file is read up front. Read each other file when it is needed. Phase 0
 
 **Briefs are handed over whole.** Each brief is self-contained. To dispatch: read it, replace every placeholder listed in its header comment (`REPORT_FILE`: see **Run directory**), confirm no `{{` remains (the header comment contains none), and pass it on verbatim, header comment included. Never paraphrase or abridge a brief.
 
-**Sequence:** Preflight → Specification → SPEC LOCK → Planning → Implementation ⇄ Integration, repeated until the locked specification is satisfied → Completion Gate → Delivery. Read a phase's file before acting in it; re-read it if it has left your context. Never collapse specification, implementation and integration into one agent pass.
+## Phases
+
+| Phase | File | Produces | Exit |
+|---|---|---|---|
+| 0 Preflight | this file | Stage A results, run directory | `run.md` created |
+| 1 Specification | `phases/1-specification.md` | Research, baseline, Environment block, LOCKED SPECIFICATION with delivery branch | SPEC LOCK |
+| 2 Planning | `phases/2-planning.md` | Implementation DAG, tier routing, draft E2E scenarios, concurrency cap | Stage C run |
+| 3 Implementation | `phases/3-implementation.md` | Accepted streams, composed into one candidate | Coherent candidate |
+| 4 Integration | `phases/4-integration.md` | Reviews, test and E2E evidence, defect ledger | No open defects → 5; defects → 2 and 3; specification defect → 1 |
+| 5 Completion | `phases/5-completion.md` | Completion Gate evidence, delivery, completion report | `Status: complete` |
+
+Read a phase's file before acting in it; re-read it if it has left your context. Never collapse specification, implementation and integration into one agent pass.
+
+**Target.** Every phase works towards the Completion Gate: every acceptance criterion evidenced; a full-suite pass and every fixed E2E plan passing on the final candidate SHA, with evidence you have reviewed; invariant tests that assert their invariants; lifecycle, failure and migration behaviour exercised; nothing growing without a retention policy; documentation of observed behaviour; no residue and no unexplained scope expansion in the diff.
+
+**Seams.** Defects concentrate at seams: assumptions between streams and about dependencies, application/platform boundaries, state transitions, timing, failure and recovery paths. Plan boundaries and contracts to minimise seams; spend integration effort on them.
 
 ---
 
@@ -119,11 +134,15 @@ Spend: <the spend line (Phase 3)>
 
 ## Decisions
 - <question> → <answer>   (one line per conductor answer or budget change)
+
+## Lessons
+- <lesson> — <evidence: defect IDs, rounds, incidents>
 ```
 
 This session's id, for `Sessions:`, is `${CLAUDE_SESSION_ID}`.
 
 - Update `run.md` on each phase change, conductor answer, Environment block change and processed report, refreshing `Next:` and `Spend:` in the same edit.
+- Append to `## Lessons` when a defect class recurs, a rule of this skill misfires or costs more than it buys, or something works notably well. These feed the completion report's proposed process changes.
 - Edit files in place; use Write only to create one. Make updates that fall due together in one turn.
 - `REPORT_FILE` is the absolute path of the dispatch's `reports/` file, numbered and named like its `dispatches/` file.
 - A dispatch is **in flight** until its number is in `Processed:` or `Abandoned:`.

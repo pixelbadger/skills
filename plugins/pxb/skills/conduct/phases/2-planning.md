@@ -5,6 +5,7 @@
 Split the work into streams. For each, record: objective; contract with other streams; owned files and components; dependencies; acceptance checks; risks; tier; whether it can run in parallel; expected handover.
 
 - Prefer contracts over coordination: a good stream succeeds without talking to another because both share a precise contract. If workers would need to negotiate, re-decompose.
+- Every seam between streams is a likely defect site (see **Seams**, SKILL.md): make its contract explicit on both sides and give it an acceptance check.
 - Choose boundaries that minimise overlapping file ownership. Sequence streams that make semantic decisions in the same files.
 - Minimise total time to a validated system, not maximise parallelism: fast streams with poor boundaries cost hours of reconciliation.
 
@@ -21,6 +22,6 @@ Draft the E2E scenarios now, from the E2E scope (`reference/e2e-design.md`). Any
 
 ## 4. Schedule
 
-Show the conductor the DAG and tier routing. Run Stage C and compute the cap. Launch streams whose dependencies are met, up to the cap; queue the rest. When a stream exposes a missing prerequisite: within the locked spec, replan and dispatch it; if it needs a new product or contract decision, stop the affected branch and reopen the specification.
+Show the conductor the DAG and tier routing. Run Stage C and compute the cap.
 
-With the first streams dispatched, set `Phase: implementation` and read `phases/3-implementation.md`.
+Then set `Phase: implementation` and read `phases/3-implementation.md`, which dispatches the streams.

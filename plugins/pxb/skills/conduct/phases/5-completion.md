@@ -19,7 +19,7 @@ The change is complete only when you can demonstrate all of:
 ## Delivery
 
 - Repository rules the change itself must satisfy (version bump, docs, tests) are acceptance criteria, delivered by implementors.
-- Deliver onto the branch the conductor or session designates. Otherwise use the repository's convention (e.g. `feature/<name>`), confirmed at SPEC LOCK. Moving the accepted composition there by fast-forward or conflict-free merge is plumbing. Then remove the swarm worktrees and `swarm/*` branches.
+- Deliver onto the branch locked in the specification (Phase 1). Moving the accepted composition there by fast-forward or conflict-free merge is plumbing. Then remove the swarm worktrees and `swarm/*` branches.
 - Open a pull request only if the conductor asked for one, following the repository's template and conventions.
-- You choose the commit trailer and put it in every implementor brief. Precedence: the conductor's instructions, then the repository's rules, then the session's attribution instructions.
+- Commits carry the trailer set at dispatch (Phase 3).
 - Report using `reference/completion-report.md`, then set `Phase: completion · Status: complete` in `run.md`.
