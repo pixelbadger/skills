@@ -54,7 +54,7 @@ Heal rules:
 | **Disk** | Free disk ≥ (units about to run × measured per-unit disk footprint) + E2E evidence. | Remove build outputs of accepted or superseded worktrees, and evidence dirs of superseded candidates from this run. |
 | **Memory → concurrency cap** | Compute the cap per the concurrency policy in SKILL.md. Pass if the cap is at least 1. | Lower the cap: the cap *is* the heal. Queue the units that don't fit. |
 
-The per-unit footprint is measured, never guessed: during the baseline (Phase 1 §1 step 7), the orchestrator records one build's peak memory and disk use, and the baseline test executor reports one test run's, both with the Stage A measurement method. If either wasn't measured (e.g. the build already existed, or the measurement failed), don't rebuild just to measure: measure the next build or test run instead. Until then the memory quotient can't be computed, and the cap is 1.
+The per-unit footprint is measured, never guessed: during the baseline (Phase 1 §1 step 5), the orchestrator records one build's peak memory and disk use, and the baseline test executor reports one test run's, both with the Stage A measurement method. If either wasn't measured (e.g. the build already existed, or the measurement failed), don't rebuild just to measure: measure the next build or test run instead. Until then the memory quotient can't be computed, and the cap is 1.
 
 ## Recording
 
