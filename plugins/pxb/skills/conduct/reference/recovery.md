@@ -12,4 +12,4 @@ A run whose session ended (a crash, a closed terminal, exhausted context) contin
 
    Abandoned dispatches stay in the spend.
 6. **Re-check the environment.** Re-run Stages A and B, and Stage C before the next fan-out. The baseline still holds if the base worktree exists at the base SHA; otherwise rebuild it and re-run the baseline.
-7. **Report and continue.** Tell the conductor in a few lines what was recovered: phase, spec version and lock state, stream ledger, open defects, spend, what is being re-dispatched, and any differences step 4 found. Then continue from `Next:`. In the specification phase, carry on grilling from `## Decisions` without asking those questions again.
+7. **Report and continue.** Tell the conductor in a few lines what was recovered: phase, spec version and lock state, stream ledger, open defects, spend, what is being re-dispatched, and any differences step 4 found. Then read the phase file for `Phase:` (see SKILL.md, **Skill files**) and continue from `Next:`. In the specification phase, carry on grilling from `## Decisions` without asking those questions again.
