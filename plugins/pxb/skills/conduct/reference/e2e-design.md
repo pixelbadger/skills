@@ -81,4 +81,12 @@ Outcomes:
 | BLOCKED after one retry | environment issue | diagnose read-only. If it can't be resolved, record it as a residual risk and tell the conductor. A criterion with no E2E evidence is not complete |
 | Evidence reveals behaviour the spec never decided | specification defect | return to Phase 1 |
 
-After any implementation round, re-run every E2E plan that touches changed behaviour, on the new candidate SHA. Evidence from an earlier SHA does not count. A re-run may go to the same executor as a message carrying an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) plus any added scenarios. The executor must not read earlier evidence.
+After any implementation round, re-run every E2E plan that touches changed behaviour, on the new candidate SHA. Evidence from an earlier SHA does not count. A re-run may go to the same executor as a message carrying an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir, a new report file) plus any added scenarios. The executor must not read earlier evidence.
+
+## 5. Early visual checkpoint
+
+Read when a stream that changes what users see returns, before you accept it. Visual intent is cheap to correct now and expensive after integration.
+
+1. Dispatch a mechanical-tier executor with `briefs/e2e-executor.md` and a one-scenario plan: start the stream's build, navigate, capture one PNG.
+2. Judge the PNG against the locked spec. If it contradicts the spec, reject the stream and re-dispatch it with the discrepancy; otherwise it may be accepted.
+3. Show the conductor the PNG with one line on what it shows and what you decided. Don't wait for a reply. Later feedback is handled as at any other time: a spec change reopens Phase 1; anything within the spec becomes a fix in the stream.

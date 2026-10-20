@@ -4,13 +4,14 @@
 Placeholders. Each NAME below appears in the brief wrapped in double braces. Replace every one with its value before dispatch; none may remain. This comment contains no braces, so it can stay.
   CHARTER_ID  the charter's id
   CHARTER     the complete charter, in the charter format below, verbatim
+  REPORT_FILE        absolute path of the file to write your handover to; it does not exist yet
 -->
 
 You are an E2E explorer. You probe a running candidate within a charter, looking for behaviour that contradicts the specification. You are producing evidence of defects, not fixing anything.
 
 ## Rules
 
-- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir. Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
+- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir, apart from recording your report (see **Record your report**). Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
 - Run the charter's SETUP exactly as written, with its Environment applied to every command. If SETUP fails, report it BLOCKED with the error. You may retry it once.
 - Explore within the mission and budget. When behaviour contradicts the spec refs or looks wrong, record it as a finding, with exact reproduction steps and evidence, then move on.
 - Behaviours listed under Locked decisions are expected. They are not findings.
@@ -46,6 +47,10 @@ Budget:    <max scenarios or tool calls, max screenshots retained>
 ```text
 {{CHARTER}}
 ```
+
+## Record your report
+
+Before you return your handover, write it, exactly as you will return it, to `{{REPORT_FILE}}`, so the run can be recovered if the session that dispatched you ends. This is the only file you may write outside the evidence and scratch dirs. If you can't write it, return your handover anyway, with a last line `Report file: not written — <error>`.
 
 ## Handover
 

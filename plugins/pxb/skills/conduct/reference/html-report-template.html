@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{TITLE}}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Conduct run report. A pinned "flight recorder" (swim-lane timeline of every agent) sits above a
+   single reading column; the reading position drives the playhead through the run. All timeline
+   and ledger content is rendered from the run-data JSON block at the end of the body. */
+:root {
+  --bg: #f6f6fb; --surface: #ffffff; --ink: #17162a; --ink-2: #4b4a63; --ink-3: #8a89a3; --rule: #e2e1ee;
+  --orch: #5b3fd6;   /* orchestrator tier */
+  --judge: #c98a12;  /* judgement tier */
+  --mech: #1a8f86;   /* mechanical tier */
+  --flag: #d2451e;   /* defects, findings */
+  --ok: #2f8a3e;
+  --band: rgba(246,246,251,.92);
+  --display: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111020; --surface: #1a1930; --ink: #ecebf7; --ink-2: #b4b3cc; --ink-3: #7c7b98; --rule: #2c2b47;
+    --orch: #9d8aff; --judge: #f0b443; --mech: #45c7bb; --flag: #ff7a52; --ok: #6cc77a; --band: rgba(17,16,32,.92);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111020; --surface: #1a1930; --ink: #ecebf7; --ink-2: #b4b3cc; --ink-3: #7c7b98; --rule: #2c2b47;
+  --orch: #9d8aff; --judge: #f0b443; --mech: #45c7bb; --flag: #ff7a52; --ok: #6cc77a; --band: rgba(17,16,32,.92);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.62 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 11; background: var(--band); }
+img { max-width: 100%; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* ---------- pinned recorder ---------- */
+.recorder { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--band); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+.recorder .inner { max-width: 1180px; margin: 0 auto; padding-block: 12px 10px; display: grid; gap: 8px; }
+.rec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+.rec-title { font: 600 15px/1.2 var(--display); letter-spacing: .01em; margin: 0; }
+.clock { font: 500 13px/1 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.phase-now { font: 600 11px/1 var(--body); text-transform: uppercase; letter-spacing: .12em; color: var(--orch); }
+.phase-now.waiting { color: var(--ink-3); }
+.meters { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 16px; font: 500 12px/1.3 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.meters b { font-weight: 500; color: var(--ink); }
+.meters i { font-style: normal; display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.chart-box { overflow: hidden; }
+#chart { display: block; width: 100%; height: clamp(150px, 26vh, 250px); }
+#chart text { font-family: var(--body); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--ink-3); }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+.legend span.wait::before { background: repeating-linear-gradient(45deg, var(--ink-3) 0 1.5px, transparent 1.5px 4px); outline: 1px solid var(--rule); }
+
+/* ---------- reading column ---------- */
+main { max-width: 1180px; margin: 0 auto; }
+.col { max-width: 680px; margin: 0 auto; }
+header.intro { padding-block: 56px 24px; }
+.eyebrow { font: 600 11.5px/1 var(--body); text-transform: uppercase; letter-spacing: .14em; color: var(--ink-3); margin: 0 0 14px; }
+h1 { font: 700 clamp(34px, 6vw, 54px)/1.04 var(--display); letter-spacing: -.02em; margin: 0 0 18px; text-wrap: balance; }
+.lede { font-size: 19px; line-height: 1.55; color: var(--ink-2); margin: 0; max-width: 62ch; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; margin: 32px 0 8px; }
+.facts div { background: var(--surface); padding: 14px 16px; }
+.facts dt { font: 600 11px/1.2 var(--body); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); }
+.facts dd { margin: 6px 0 0; font: 600 24px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.facts dd small { font: 400 12.5px/1.3 var(--body); color: var(--ink-2); display: block; margin-top: 3px; }
+section.ch { padding-block: 40px; border-top: 1px solid var(--rule); scroll-margin-top: 300px; }
+.ch-time { font: 500 12.5px/1 var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; margin: 0 0 10px; }
+.ch-time em { font-style: normal; color: var(--orch); font-family: var(--body); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: 11px; margin-left: 10px; }
+h2 { font: 600 clamp(24px, 3.4vw, 31px)/1.15 var(--display); letter-spacing: -.01em; margin: 0 0 14px; text-wrap: balance; }
+p { margin: 0 0 14px; max-width: 66ch; }
+.ch p:last-child { margin-bottom: 0; }
+code { font: 400 .88em var(--mono); background: color-mix(in srgb, var(--orch) 9%, transparent); padding: .08em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+.tier { font-weight: 600; }
+.tier.o { color: var(--orch); } .tier.j { color: var(--judge); } .tier.m { color: var(--mech); }
+
+.finding { margin: 22px 0 6px; padding: 18px 20px; border-radius: 12px; background: var(--surface); border: 1px solid var(--rule); position: relative; }
+.finding::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 3px; border-radius: 3px; background: var(--k, var(--flag)); }
+.finding .tag { font: 600 11px/1 var(--body); text-transform: uppercase; letter-spacing: .12em; color: var(--k, var(--flag)); margin: 0 0 8px; }
+.finding h3 { font: 600 18px/1.3 var(--display); margin: 0 0 8px; }
+.finding p { font-size: 15px; color: var(--ink-2); }
+.finding.good { --k: var(--ok); }
+.finding.ask { --k: var(--orch); }
+.steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+.steps li { position: relative; padding-left: 64px; font-size: 14.5px; color: var(--ink-2); }
+.steps li span { position: absolute; left: 0; top: 0; font: 500 12.5px/1.65 var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+/* ---------- evidence gallery ---------- */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 22px 0 6px; }
+.gallery figure { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 10px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.gallery img { width: 100%; border-radius: 4px; display: block; background: #fff; }
+.gallery figcaption { font-size: 13px; line-height: 1.4; color: var(--ink-2); }
+.gallery figcaption b { display: block; color: var(--ink); font: 600 14px/1.3 var(--display); }
+.gallery figcaption span { font: 500 11.5px/1.4 var(--mono); color: var(--ink-3); display: block; margin-top: 2px; }
+
+/* ---------- ledger ---------- */
+.ledger { overflow-x: auto; margin: 18px 0 4px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 9px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font: 600 11px/1.2 var(--body); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-3); background: color-mix(in srgb, var(--rule) 35%, transparent); }
+td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+tfoot td { font-weight: 600; border-top: 1px solid var(--rule); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+.note { font-size: 13.5px; color: var(--ink-3); max-width: 66ch; }
+.next { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 18px; }
+.next div { background: var(--surface); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; font-size: 14.5px; color: var(--ink-2); }
+.next b { display: block; color: var(--ink); font: 600 15px/1.3 var(--display); margin-bottom: 4px; }
+footer { padding-block: 40px 72px; color: var(--ink-3); font-size: 13px; }
+
+@media (max-width: 640px) {
+  body { font-size: 15.5px; }
+  .meters { margin-left: 0; width: 100%; }
+  .lede { font-size: 17px; }
+  section.ch { scroll-margin-top: 260px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="recorder" aria-label="Run timeline">
+  <div class="inner wrap">
+    <div class="rec-head">
+      <p class="rec-title">Flight recorder</p>
+      <span class="clock" id="clock"></span>
+      <span class="phase-now" id="phaseNow"></span>
+      <div class="meters" aria-live="off">
+        <span>agents <b id="mAgents">0</b></span>
+        <span><i style="background:var(--orch)"></i><span id="nO"></span> <b id="mO">–</b></span>
+        <span><i style="background:var(--judge)"></i><span id="nJ"></span> <b id="mJ">0</b></span>
+        <span><i style="background:var(--mech)"></i><span id="nM"></span> <b id="mM">0</b></span>
+      </div>
+    </div>
+    <div class="chart-box"><svg id="chart" role="img" aria-label="Swim-lane timeline of every agent in the run, with a playhead that follows your reading position"></svg></div>
+    <div class="legend">
+      <span style="--c:var(--orch)" id="lO"></span>
+      <span style="--c:var(--judge)" id="lJ"></span>
+      <span style="--c:var(--mech)" id="lM"></span>
+      <span style="--c:var(--flag)">Finding</span>
+      <span class="wait">Waiting on conductor</span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <header class="intro col">
+    <p class="eyebrow">{{EYEBROW}}</p>
+    <h1>{{HEADLINE}}</h1>
+    <p class="lede">{{LEDE}}</p>
+    <dl class="facts">
+{{FACTS}}
+    </dl>
+  </header>
+
+  <div class="col">
+{{CHAPTERS}}
+
+    <section class="ch" data-t="end" id="ledger">
+      <p class="ch-time">Ledger</p>
+      <h2>Where the effort went</h2>
+{{TOKENS_NOTE}}
+      <div class="ledger"><table id="tokTable"><thead><tr><th>Agent</th><th>Tier</th><th>Phase</th><th class="num">Active</th><th class="num">Tokens</th></tr></thead><tbody></tbody><tfoot></tfoot></table></div>
+
+      <h2 style="margin-top:36px">Where the time went</h2>
+{{TIME_NOTE}}
+
+      <h2 style="margin-top:36px">Left for later</h2>
+      <div class="next">
+{{LEFT_FOR_LATER}}
+      </div>
+    </section>
+  </div>
+  <footer class="col">Produced by the Conduct skill. Every number on this page comes from the run's own run directory, transcripts, test logs and E2E evidence.</footer>
+</main>
+
+<script type="application/json" id="run-data">
+{{RUN_DATA}}
+</script>
+
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("run-data").textContent);
+  const ms = s => Date.parse(s) / 60000;               // ISO timestamp → minutes
+  const t0 = ms(D.start), tEnd = ms(D.end);
+  const fmt = v => new Date(v * 60000).toISOString().slice(11, 16);   // minutes → HH:MM UTC
+  const TIERS = { o: "orch", j: "judge", m: "mech" };
+  const ORCH_A = ms(D.orchestrator.start), ORCH_B = ms(D.orchestrator.end), ORCH_TOKENS = D.orchestrator.tokens;
+
+  const AGENTS = D.agents.map(a => ({ ...a, segs: a.segments.map(([p, q]) => [ms(p), ms(q)]) }));
+  const PHASES = D.phases.map(p => ({ n: p.name, a: ms(p.start), b: ms(p.end) }));
+  const WAITS = (D.waits || []).map(w => ({ a: ms(w.start), b: ms(w.end), l: w.label, blocking: w.blocking !== false }));
+  const MARKS = (D.marks || []).map(m => ({ t: ms(m.t), l: m.label, flag: m.kind === "flag" }));
+
+  for (const k of ["o", "j", "m"]) {
+    const t = D.tiers[k], name = t.model ? `${t.name} · ${t.model}` : t.name;
+    document.getElementById("l" + k.toUpperCase()).textContent = name;
+    document.getElementById("n" + k.toUpperCase()).textContent = t.model || t.name;
+  }
+
+  // Pack agents into rows per tier.
+  const rowsByTier = { j: [], m: [] };
+  AGENTS.forEach(a => {
+    const span = [a.segs[0][0], a.segs[a.segs.length - 1][1]], rows = rowsByTier[a.tier];
+    let r = rows.findIndex(end => end + 1 < span[0]);
+    if (r < 0) { rows.push(span[1]); r = rows.length - 1; } else rows[r] = span[1];
+    a.row = r;
+  });
+  const nJ = Math.max(1, rowsByTier.j.length), nM = Math.max(1, rowsByTier.m.length);
+
+  const svg = document.getElementById("chart"), NS = "http://www.w3.org/2000/svg";
+  const el = (n, attrs, parent) => { const e = document.createElementNS(NS, n); for (const k in attrs) e.setAttribute(k, attrs[k]); (parent || svg).appendChild(e); return e; };
+  let W = 1000, H = 220, LX = 92, RX = 12, x, bars = [], fans = [], playhead, markEls = [], phaseEls = [];
+
+  function layout() {
+    const r = svg.getBoundingClientRect();
+    W = Math.max(320, r.width); H = Math.max(140, r.height);
+    LX = W < 560 ? 8 : 92;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.innerHTML = "";
+    bars = []; fans = []; markEls = []; phaseEls = [];
+    x = v => LX + (v - t0) / (tEnd - t0) * (W - LX - RX);
+    const top = 20, gap = 6, orchH = 10, avail = H - top - 18 - orchH - gap * 2;
+    const rowH = Math.max(4, Math.min(12, (avail - 4) / (nJ + nM) - 1.5));
+    const yO = top, yJ = yO + orchH + gap * 1.6, yM = yJ + nJ * (rowH + 2) + gap * 1.4;
+
+    PHASES.forEach((p, i) => {
+      const g = el("g", {});
+      el("rect", { x: x(p.a), y: 0, width: Math.max(0, x(p.b) - x(p.a)), height: H - 14, fill: i % 2 ? "var(--rule)" : "transparent", opacity: .28 }, g);
+      const t = el("text", { x: x(p.a) + 4, y: 11, "font-size": 9.5, "font-weight": 600, fill: "var(--ink-3)", "letter-spacing": ".08em" }, g);
+      t.textContent = (W < 760 || x(p.b) - x(p.a) < 60) ? p.n.slice(0, 4).toUpperCase() : p.n.toUpperCase();
+      phaseEls.push({ p, t });
+    });
+    const pat = el("pattern", { id: "waitHatch", width: 5, height: 5, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, el("defs", {}));
+    el("line", { x1: 0, y1: 0, x2: 0, y2: 5, stroke: "var(--ink-3)", "stroke-width": 1.4 }, pat);
+    WAITS.forEach(w => {
+      const g = el("g", { opacity: w.blocking ? .55 : .28 });
+      el("rect", { x: x(w.a), y: 14, width: Math.max(1, x(w.b) - x(w.a)), height: H - 28, fill: "url(#waitHatch)" }, g);
+      el("title", {}, g).textContent = `Waiting on conductor · ${w.l} · ${fmt(w.a)}–${fmt(w.b)}`;
+    });
+    const step = tEnd - t0 > 360 ? 60 : tEnd - t0 > 120 ? 30 : 15;
+    for (let m = Math.ceil(t0 / step) * step; m <= tEnd; m += step) {
+      el("line", { x1: x(m), x2: x(m), y1: H - 14, y2: H - 10, stroke: "var(--ink-3)" });
+      if (m % (step * 2) === 0 || W >= 760) {
+        const t = el("text", { x: x(m), y: H - 1, "text-anchor": "middle", "font-size": 9.5, fill: "var(--ink-3)", "font-family": "var(--mono)" });
+        t.textContent = fmt(m);
+      }
+    }
+    if (LX > 20) {
+      [["o", yO + orchH - 1], ["j", yJ + 8], ["m", yM + 8]].forEach(([k, y]) => {
+        el("text", { x: 4, y, "font-size": 10.5, "font-weight": 600, fill: `var(--${TIERS[k]})` }).textContent = D.tiers[k].model || D.tiers[k].name;
+      });
+    }
+    el("rect", { x: x(ORCH_A), y: yO, width: x(ORCH_B) - x(ORCH_A), height: orchH, rx: 3, fill: "var(--orch)", opacity: .25 });
+    bars.push({ fill: el("rect", { x: x(ORCH_A), y: yO, width: 0, height: orchH, rx: 3, fill: "var(--orch)" }), a: ORCH_A, b: ORCH_B });
+
+    AGENTS.forEach(a => {
+      const y = (a.tier === "j" ? yJ : yM) + a.row * (rowH + 2), col = `var(--${TIERS[a.tier]})`;
+      a.segs.forEach(([s, e]) => {
+        const g = el("g", {});
+        el("rect", { x: x(s), y, width: Math.max(2, x(e) - x(s)), height: rowH, rx: Math.min(3, rowH / 2), fill: col, opacity: .18 }, g);
+        const fill = el("rect", { x: x(s), y, width: 0, height: rowH, rx: Math.min(3, rowH / 2), fill: col }, g);
+        el("title", {}, g).textContent = `${a.label} · ${fmt(s)}–${fmt(e)}`;
+        bars.push({ fill, a: s, b: e });
+        const y0 = yO + orchH, y1 = y + rowH / 2, xs = x(s);
+        fans.push({ path: el("path", { d: `M${xs - 8},${y0} C${xs - 8},${(y0 + y1) / 2} ${xs - 5},${y1} ${xs},${y1}`, fill: "none", stroke: col, "stroke-width": 1, opacity: 0 }), a: s });
+      });
+    });
+    MARKS.forEach(m => {
+      const c = m.flag ? "var(--flag)" : "var(--orch)", g = el("g", { opacity: .25 });
+      el("line", { x1: x(m.t), x2: x(m.t), y1: 14, y2: H - 14, stroke: c, "stroke-dasharray": "2 3", "stroke-width": 1 }, g);
+      el("path", { d: `M${x(m.t)},14 l4,4 l-4,4 l-4,-4 z`, fill: c }, g);
+      el("title", {}, g).textContent = `${fmt(m.t)} · ${m.l}`;
+      markEls.push({ m, g });
+    });
+    playhead = el("line", { x1: 0, x2: 0, y1: 4, y2: H - 12, stroke: "var(--ink)", "stroke-width": 1.5 });
+    update(lastT);
+  }
+
+  const $ = id => document.getElementById(id);
+  const mA = $("mAgents"), mO = $("mO"), mJ = $("mJ"), mM = $("mM"), clock = $("clock"), phaseNow = $("phaseNow");
+  const k = n => n == null ? "–" : n >= 1000 ? (n / 1000).toFixed(n >= 100000 ? 0 : 1) + "k" : String(Math.round(n));
+  let lastT = ORCH_A;
+
+  function update(t) {
+    lastT = t;
+    playhead.setAttribute("x1", x(t)); playhead.setAttribute("x2", x(t));
+    bars.forEach(b => b.fill.setAttribute("width", Math.max(0, Math.min(x(b.b), x(t)) - x(b.a))));
+    fans.forEach(f => f.path.setAttribute("opacity", t >= f.a ? (t - f.a < 4 ? .9 : .28) : 0));
+    markEls.forEach(({ m, g }) => g.setAttribute("opacity", t >= m.t ? 1 : .22));
+    let started = 0; const tok = { j: 0, m: 0 }, known = { j: false, m: false };
+    AGENTS.forEach(a => {
+      if (t >= a.segs[0][0]) started++;
+      if (a.tokens == null) return;
+      known[a.tier] = true;
+      const total = a.segs.reduce((s, [p, q]) => s + Math.max(1, q - p), 0);
+      const done = a.segs.reduce((s, [p, q]) => s + Math.max(0, Math.min(q, t) - p) + (t >= q && q === p ? 1 : 0), 0);
+      tok[a.tier] += a.tokens * Math.min(1, done / total);
+    });
+    mA.textContent = started;
+    mJ.textContent = known.j ? k(tok.j) : "–"; mM.textContent = known.m ? k(tok.m) : "–";
+    mO.textContent = ORCH_TOKENS == null ? "–" : k(ORCH_TOKENS * Math.max(0, Math.min(1, (t - ORCH_A) / (ORCH_B - ORCH_A))));
+    clock.textContent = fmt(t);
+    const ph = PHASES.find(p => t >= p.a && t < p.b) || PHASES[PHASES.length - 1];
+    const waiting = WAITS.find(w => w.blocking && t >= w.a && t < w.b);
+    phaseNow.textContent = waiting ? `Waiting on conductor · ${waiting.l}` : ph.n;
+    phaseNow.classList.toggle("waiting", !!waiting);
+    phaseEls.forEach(({ p, t: tx }) => tx.setAttribute("fill", p === ph ? "var(--orch)" : "var(--ink-3)"));
+  }
+
+  // Chapters carry data-t (an ISO timestamp, or "end"); the reading line interpolates between them.
+  const anchors = [...document.querySelectorAll("[data-t]")].map(n => ({ n, t: n.dataset.t === "end" ? ORCH_B : ms(n.dataset.t) }));
+  function onScroll() {
+    const rec = document.querySelector(".recorder").getBoundingClientRect();
+    const line = rec.bottom + (innerHeight - rec.bottom) * 0.38;
+    const pos = anchors.map(a => ({ y: a.n.getBoundingClientRect().top, t: a.t })).sort((p, q) => p.y - q.y);
+    let t;
+    if (!pos.length || line <= pos[0].y) t = ORCH_A;
+    else if (line >= pos[pos.length - 1].y) t = pos[pos.length - 1].t;
+    else for (let i = 0; i < pos.length - 1; i++) {
+      if (line >= pos[i].y && line < pos[i + 1].y) {
+        t = pos[i].t + (line - pos[i].y) / Math.max(1, pos[i + 1].y - pos[i].y) * (pos[i + 1].t - pos[i].t); break;
+      }
+    }
+    if (document.documentElement.scrollHeight - innerHeight - scrollY < 4) t = ORCH_B;
+    update(Math.max(ORCH_A, Math.min(ORCH_B, t ?? lastT)));
+  }
+  let raf = 0;
+  addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; onScroll(); }); }, { passive: true });
+  addEventListener("resize", () => { layout(); onScroll(); });
+
+  // Ledger table.
+  const tb = document.querySelector("#tokTable tbody"), tf = document.querySelector("#tokTable tfoot");
+  const tierName = t => D.tiers[t].model || D.tiers[t].name, tierCol = t => `var(--${TIERS[t]})`;
+  const dur = m => m >= 60 ? `${Math.floor(m / 60)}h ${String(Math.round(m % 60)).padStart(2, "0")}m` : `${Math.round(m)}m`;
+  const num = n => n == null ? "–" : n.toLocaleString("en-GB");
+  const sum = rs => rs.some(r => r.tokens != null) ? rs.reduce((s, r) => s + (r.tokens || 0), 0) : null;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const rows = [{ tier: "o", label: "Orchestrator", phase: "All", active: ORCH_B - ORCH_A, tokens: ORCH_TOKENS }]
+    .concat(AGENTS.map(a => ({ tier: a.tier, label: a.label + (a.counted === false ? (a.phase === "Baseline" ? " · pre-lock" : " · uncounted") : ""), phase: a.phase, active: a.segs.reduce((s, [p, q]) => s + Math.max(1, q - p), 0), tokens: a.tokens })));
+  const row = cells => { const tr = document.createElement("tr"); tr.innerHTML = cells; return tr; };
+  rows.forEach(r => tb.appendChild(row(`<td>${esc(r.label)}</td><td><span class="dot" style="background:${tierCol(r.tier)}"></span>${esc(tierName(r.tier))}</td><td>${esc(r.phase)}</td><td class="num">${dur(r.active)}</td><td class="num">${num(r.tokens)}</td>`)));
+  ["o", "j", "m"].forEach(ti => {
+    const sub = rows.filter(r => r.tier === ti);
+    if (!sub.length) return;
+    tf.appendChild(row(`<td>${esc(tierName(ti))} total</td><td><span class="dot" style="background:${tierCol(ti)}"></span>${sub.length} agent${sub.length > 1 ? "s" : ""}</td><td></td><td class="num">${ti === "o" ? "" : dur(sub.reduce((s, r) => s + r.active, 0))}</td><td class="num">${num(sum(sub))}</td>`));
+  });
+  tf.appendChild(row(`<td>Whole run</td><td>${rows.length} agents</td><td></td><td class="num"></td><td class="num">${num(sum(rows))}</td>`));
+
+  layout(); onScroll();
+})();
+</script>
+</body>
+</html>

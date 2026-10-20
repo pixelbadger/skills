@@ -31,6 +31,7 @@ Heal rules:
 | **Base commit** | The base commit resolves (`git rev-parse <base>`) and checks out into a worktree. | Fetch the base branch once. |
 | **Toolchain / SDK** | Every SDK and tool the build, tests and E2E need is present at the version the repository pins (e.g. `global.json`, `.nvmrc`, `rust-toolchain`). | None. Installing a toolchain is the conductor's call: raise. |
 | **Peak-memory measurement** | A way to measure a command's peak memory works here. Try, in order: `/usr/bin/time -v` ("Maximum resident set size"); the cgroup v2 `memory.peak` of a transient scope (e.g. `systemd-run --scope`); sampling the command's process tree from `/proc` every 0.5 s as a wrapper that exits with the command; on Windows, the process's `PeakWorkingSet64`. Record the first that works as the `Measurement:` line. | None needed: falling back down the list is the check. If none works, raise. Until then the memory footprint is unknown, and the concurrency cap is 1. |
+| **Run directory** | `~/.claude/pxb/runs` exists, or can be created, and a file can be written and deleted there. | Create the directory. If it still isn't writable, use a `pxb-runs` directory in this session's scratch instead, and record that the run is recoverable only while that scratch survives. |
 | **Package-feed credentials** | A clean restore from every feed the build uses succeeds, private feeds included. A cached restore is not proof. | Re-restore into a fresh package cache in scratch (e.g. `NUGET_PACKAGES`, `npm_config_cache`). Never delete the conductor's own cache. Missing or expired credentials can't be healed: raise. |
 
 ## Stage B — stack
@@ -53,7 +54,7 @@ Heal rules:
 | **Disk** | Free disk ≥ (units about to run × measured per-unit disk footprint) + E2E evidence. | Remove build outputs of accepted or superseded worktrees, and evidence dirs of superseded candidates from this run. |
 | **Memory → concurrency cap** | Compute the cap per the concurrency policy in SKILL.md. Pass if the cap is at least 1. | Lower the cap: the cap *is* the heal. Queue the units that don't fit. |
 
-The per-unit footprint is measured, never guessed: during the baseline (Phase 1 §1 step 7), the orchestrator records one build's peak memory and disk use, and the baseline test executor reports one test run's, both with the Stage A measurement method. If either wasn't measured (e.g. the build already existed, or the measurement failed), don't rebuild just to measure: measure the next build or test run instead. Until then the memory quotient can't be computed, and the cap is 1.
+The per-unit footprint is measured, never guessed: during the baseline (`phases/1-specification.md` §1 step 5), the orchestrator records one build's peak memory and disk use, and the baseline test executor reports one test run's, both with the Stage A measurement method. If either wasn't measured (e.g. the build already existed, or the measurement failed), don't rebuild just to measure: measure the next build or test run instead. Until then the memory quotient can't be computed, and the cap is 1.
 
 ## Recording
 
@@ -67,7 +68,8 @@ Known constraints:     <e.g. a tool that is missing, a test category that can't 
 Measurement:           <the Stage A peak-memory method, as an exact wrapper command>
 Pre-existing failures: <test ids, or none, or pending baseline>
 Footprint (one unit):  disk <measured>, peak memory <measured | not yet measured>
-Stage A: disk/memory <pass|healed: …|raised>; base <…>; toolchain <…>; measurement <…>; feeds <…>
+Run directory:         <absolute path>
+Stage A: disk/memory <pass|healed: …|raised>; base <…>; toolchain <…>; measurement <…>; run dir <…>; feeds <…>
 Stage B: docker <…|n/a>; local DB <…|n/a>; E2E host <…>; browser <…|n/a>
 Stage C: cap <N> (free memory <…>, free disk <…>), at <time or round> | not yet run
 ```

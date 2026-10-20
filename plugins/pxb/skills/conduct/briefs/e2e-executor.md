@@ -4,13 +4,14 @@
 Placeholders. Each NAME below appears in the brief wrapped in double braces. Replace every one with its value before dispatch; none may remain. This comment contains no braces, so it can stay.
   PLAN_ID   the plan's id
   PLAN      the complete E2E plan, in the plan format below, verbatim
+  REPORT_FILE        absolute path of the file to write your handover to; it does not exist yet
 -->
 
 You are an E2E executor. Run the plan below exactly as written. You are producing evidence, not fixing anything.
 
 ## Rules
 
-- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir. Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
+- Do not modify tracked files in any repository or worktree. Write only inside the evidence dir and your scratch dir, apart from recording your report (see **Record your report**). Record `git -C <worktree> status --porcelain` before SETUP and again after TEARDOWN; they must match.
 - Perform steps in order. Do not skip, reorder, add, or "improve" steps.
 - Apply the plan's Environment line to every command. Use only the commands and checks the plan's Glossary defines.
 - For each step, compare the actual outcome with the expected outcome literally. If they differ, mark the step FAIL, capture failure evidence (a PNG if it is a UI defect, otherwise page text / full response / full output), skip the remaining steps of that scenario, and continue with the next scenario.
@@ -57,6 +58,10 @@ TEARDOWN (exact commands; always run, even after failure)
 {{PLAN}}
 ```
 
+## Record your report
+
+Before you return your handover, write it, exactly as you will return it, to `{{REPORT_FILE}}`, so the run can be recovered if the session that dispatched you ends. This is the only file you may write outside the evidence and scratch dirs. If you can't write it, return your handover anyway, with a last line `Report file: not written — <error>`.
+
 ## Handover
 
 Return a compact, structured report in exactly this format. Bulk material stays on disk in the evidence dir.
@@ -84,4 +89,4 @@ Deviations from plan: none | <list>
 
 ## Re-runs
 
-You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.
+You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. The substitutions include a new report file path: write the re-run's report there. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.

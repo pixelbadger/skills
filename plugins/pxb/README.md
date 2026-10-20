@@ -25,6 +25,7 @@ Conduct puts you in charge of a swarm of agents for large, cross-cutting or risk
 
 ```text
 /pxb:conduct <change request>
+/pxb:conduct resume [run]
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
@@ -37,6 +38,12 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 4. **Implementation.** Dispatches workers in parallel, each in its own worktree, up to a concurrency cap sized from free memory and disk.
 5. **Integration.** Composes the streams, fans out read-only reviews, test runs and E2E checks, and turns defects into further implementation rounds.
 6. **Completion.** Stops at the completion gate and delivers onto the branch you or the repository's rules designate, with a completion report.
+
+### Persistence and resume
+
+Each run keeps its state as plain Markdown files in its own directory under `~/.claude/pxb/runs/`. These are a run memory (`run.md`: phase, decisions, Environment block, spend, next step), the specification, the stream and defect ledgers, a manifest of the worktrees and branches it created, every brief it dispatched, and every worker's report. You can read them mid-run, or edit them to steer.
+
+If the session ends mid-run, `/pxb:conduct resume` in a new session finds the repository's active run, checks the recorded state against git and the filesystem, re-dispatches whatever was in flight, and carries on. Name a run directory to pick a specific run. Run directories are kept after a run finishes, for audit, until you remove them.
 
 ### Model tiers
 
