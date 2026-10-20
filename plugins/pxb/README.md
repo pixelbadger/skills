@@ -25,7 +25,7 @@ Conduct puts you in charge of a swarm of agents for large, cross-cutting or risk
 
 ```text
 /pxb:conduct <change request>
-/pxb:conduct resume [session]
+/pxb:conduct resume [run]
 ```
 
 The skill only runs when invoked explicitly. Claude will not start it on its own.
@@ -41,9 +41,9 @@ The skill only runs when invoked explicitly. Claude will not start it on its own
 
 ### Persistence and resume
 
-Conduct records each run in a SQLite database at `~/.claude/pxb/conduct.db` (override with `PXB_CONDUCT_DB`): the locked specification, your decisions, the stream and defect ledgers, every dispatch and worker report, and the worktrees and branches the run created. If the session ends mid-run, `/pxb:conduct resume` in a new session finds the active run for the repository, checks the recorded state against git and the filesystem, re-dispatches whatever was in flight, and carries on. Pass a session id to pick a specific run.
+Each run keeps its state as plain Markdown files in its own directory under `~/.claude/pxb/runs/`. These are a run memory (`run.md`: phase, decisions, Environment block, spend, next step), the specification, the stream and defect ledgers, a manifest of the worktrees and branches it created, every brief it dispatched, and every worker's report. You can read them mid-run, or edit them to steer.
 
-Each role writes only its own records: the orchestrator writes orchestration state, and each worker writes its own report. Records are kept after a run finishes, for audit, until you ask for them to go. The scripts need Python 3.8 or later. They are documented in [`skills/conduct/db/API.md`](skills/conduct/db/API.md), and the schema's design rules in [`skills/conduct/db/SQL-DEVELOPMENT.md`](skills/conduct/db/SQL-DEVELOPMENT.md).
+If the session ends mid-run, `/pxb:conduct resume` in a new session finds the repository's active run, checks the recorded state against git and the filesystem, re-dispatches whatever was in flight, and carries on. Name a run directory to pick a specific run. Run directories are kept after a run finishes, for audit, until you remove them.
 
 ### Model tiers
 

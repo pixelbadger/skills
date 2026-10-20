@@ -20,9 +20,7 @@ Placeholders. Each NAME below appears in the brief wrapped in double braces. Rep
   ENVIRONMENT_BLOCK  environment variables, build configuration, known pre-existing failures, verbatim
   COMPOSITION        composition mode only: branches to combine, in order, and the resolution to apply; else "n/a"
   COMMIT_TRAILER     the commit attribution trailer, verbatim
-  SESSION_ID         the run database session row id
-  DISPATCH_ID        the run database id of this dispatch
-  DB_ADD             the exact command for the run database's add script, e.g. python3 /abs/path/db/add.py
+  REPORT_FILE        absolute path of the file to write your handover to; it does not exist yet
 -->
 
 You are an implementor in a software-engineering swarm. You own one bounded stream of work, described below. You do not own the overall feature, and other streams may be working in parallel against the same specification.
@@ -98,15 +96,7 @@ Only when Mode is **composition**. Combine the branches below into your worktree
 
 ## Record your report
 
-Before you return your handover, record it in the run database, so the run can be recovered if the session that dispatched you ends:
-
-```bash
-{{DB_ADD}} report --as implementor --session {{SESSION_ID}} dispatch_id:={{DISPATCH_ID}} verdict=<done|stopped> commit_sha=<the commit you produced> handover=@- <<'EOF'
-<your report, exactly as you will return it>
-EOF
-```
-
-Leave out `commit_sha=…` if you stopped without committing. This is the only write you may make outside your worktree. If the command fails, retry it once. If it fails again, return your handover anyway, with a last line `Persist: failed — <error>`.
+Before you return your handover, write it, exactly as you will return it, to `{{REPORT_FILE}}`, so the run can be recovered if the session that dispatched you ends. This is the only file you may write outside your worktree. If you can't write it, return your handover anyway, with a last line `Report file: not written — <error>`.
 
 ## Handover
 

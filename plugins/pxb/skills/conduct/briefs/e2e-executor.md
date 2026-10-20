@@ -4,9 +4,7 @@
 Placeholders. Each NAME below appears in the brief wrapped in double braces. Replace every one with its value before dispatch; none may remain. This comment contains no braces, so it can stay.
   PLAN_ID   the plan's id
   PLAN      the complete E2E plan, in the plan format below, verbatim
-  SESSION_ID         the run database session row id
-  DISPATCH_ID        the run database id of this dispatch
-  DB_ADD             the exact command for the run database's add script, e.g. python3 /abs/path/db/add.py
+  REPORT_FILE        absolute path of the file to write your handover to; it does not exist yet
 -->
 
 You are an E2E executor. Run the plan below exactly as written. You are producing evidence, not fixing anything.
@@ -62,15 +60,7 @@ TEARDOWN (exact commands; always run, even after failure)
 
 ## Record your report
 
-Before you return your handover, record it in the run database, so the run can be recovered if the session that dispatched you ends:
-
-```bash
-{{DB_ADD}} report --as e2e-executor --session {{SESSION_ID}} dispatch_id:={{DISPATCH_ID}} verdict=<pass|fail|blocked> commit_sha=<the candidate SHA> handover=@- <<'EOF'
-<your E2E result, exactly as you will return it>
-EOF
-```
-
-This is the only write you may make outside the evidence and scratch dirs. If the command fails, retry it once. If it fails again, return your handover anyway, with a last line `Persist: failed — <error>`.
+Before you return your handover, write it, exactly as you will return it, to `{{REPORT_FILE}}`, so the run can be recovered if the session that dispatched you ends. This is the only file you may write outside the evidence and scratch dirs. If you can't write it, return your handover anyway, with a last line `Report file: not written — <error>`.
 
 ## Handover
 
@@ -99,4 +89,4 @@ Deviations from plan: none | <list>
 
 ## Re-runs
 
-You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. The substitutions include a new `DISPATCH_ID`: record the re-run's report under it. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.
+You may later receive a message re-running this plan on a new candidate, with an explicit substitution list (candidate SHA, worktree path, a fresh evidence dir) and possibly added scenarios. The substitutions include a new report file path: write the re-run's report there. Apply the substitutions and run the plan again from SETUP. Do not read or reuse evidence from earlier runs.

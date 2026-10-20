@@ -11,9 +11,7 @@ Placeholders. Each NAME below appears in the brief wrapped in double braces. Rep
   COMMANDS           numbered exact commands to run, in order (they must not rebuild)
   BASELINE_FAILURES  test ids known to fail on the base commit, or "none", or "this is the baseline run" (no known list)
   MEASURE_FOOTPRINT  "yes" to record peak memory and disk use per command, else "no"
-  SESSION_ID         the run database session row id
-  DISPATCH_ID        the run database id of this dispatch
-  DB_ADD             the exact command for the run database's add script, e.g. python3 /abs/path/db/add.py
+  REPORT_FILE        absolute path of the file to write your handover to; it does not exist yet
 -->
 
 You are a test executor. You run the test commands below exactly as written and report what happened. You produce evidence. You do not fix anything.
@@ -68,15 +66,7 @@ Do not guess at causes, read the code under test, or suggest fixes.
 
 ## Record your report
 
-Before you return your handover, record it in the run database, so the run can be recovered if the session that dispatched you ends:
-
-```bash
-{{DB_ADD}} report --as test-executor --session {{SESSION_ID}} dispatch_id:={{DISPATCH_ID}} verdict=<pass|fail|blocked> commit_sha={{CANDIDATE_SHA}} handover=@- <<'EOF'
-<your test result, exactly as you will return it>
-EOF
-```
-
-This is the only write you may make outside the evidence dir. If the command fails, retry it once. If it fails again, return your handover anyway, with a last line `Persist: failed — <error>`.
+Before you return your handover, write it, exactly as you will return it, to `{{REPORT_FILE}}`, so the run can be recovered if the session that dispatched you ends. This is the only file you may write outside the evidence dir. If you can't write it, return your handover anyway, with a last line `Report file: not written — <error>`.
 
 ## Handover
 
