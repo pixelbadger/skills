@@ -36,6 +36,7 @@ Only this file is read up front. Read each other file when it is needed. Phase 0
 | `reference/e2e-design.md` | Phase 1 §3 (its §1 only), Phase 2 §3, Phase 4, UI stream returns (its §5) | E2E surfaces, plans, dispatch, evidence verification, early visual checkpoint |
 | `reference/recovery.md` | Invoked with `resume` | Resuming a run from its run directory |
 | `reference/completion-report.md` | Completion Gate | Completion report template |
+| `reference/html-report.md` | Only if the conductor asks for an HTML report | HTML run report: sources, template placeholders, run data |
 | `briefs/implementor.md` | Each implementation or composition dispatch | Implementor brief |
 | `briefs/test-executor.md` | Each test-suite run | Test executor brief |
 | `briefs/reviewer.md` | Each read-only integration review | Reviewer brief |

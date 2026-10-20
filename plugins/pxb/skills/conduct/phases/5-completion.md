@@ -22,4 +22,4 @@ The change is complete only when you can demonstrate all of:
 - Deliver onto the branch locked in the specification (Phase 1). Moving the accepted composition there by fast-forward or conflict-free merge is plumbing. Then remove the swarm worktrees and `swarm/*` branches.
 - Open a pull request only if the conductor asked for one, following the repository's template and conventions.
 - Commits carry the trailer set at dispatch (Phase 3).
-- Report using `reference/completion-report.md`, then set `Phase: completion · Status: complete` in `run.md`.
+- Report using `reference/completion-report.md`. If the conductor asks for an HTML report, also follow `reference/html-report.md`. Then set `Phase: completion · Status: complete` in `run.md`.
